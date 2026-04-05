@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+.Python
+
+# Env
+.env
+.venv
+venv/
+env/
+
+# Trained model weights (large binary files)
+models/
+logs/
+ppo_traffic_tensorboard/
+
+# Distribution
+*.egg-info/
+dist/
+build/
+
+# pytest
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db

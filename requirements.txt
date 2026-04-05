@@ -1,0 +1,17 @@
+# OpenEnv core dependencies
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.7.0
+
+# Environment simulation
+numpy>=1.26.0
+gymnasium>=1.0.0
+
+# Baseline inference (LLM)
+openai>=1.30.0
+
+# HTTP requests (for baseline --base-url mode)
+requests>=2.31.0
+
+# YAML parsing (for openenv.yaml)
+pyyaml>=6.0.0

@@ -1,0 +1,82 @@
+name: indian-traffic-control
+version: "1.0.0"
+description: >
+  Autonomous Traffic Control System for a chaotic 4-way Indian intersection.
+  The AI agent manages signal phases while dealing with red-light runners,
+  potholes, monsoon weather, and emergency vehicle prioritization.
+author: "OpenEnv Hackathon Team"
+license: MIT
+
+tags:
+  - openenv
+  - traffic
+  - reinforcement-learning
+  - infrastructure
+  - autonomous-systems
+  - real-world
+
+environment:
+  class: IndianTrafficEnvironment
+  module: server.environment
+
+action_space:
+  type: discrete
+  n: 6
+  description: >
+    0=Keep Phase, 1=N/S Straight Green, 2=N/S Left-Turn Green,
+    3=E/W Straight Green, 4=E/W Left-Turn Green, 5=Pedestrian Walk
+
+observation_space:
+  type: box
+  shape: [12]
+  dtype: float32
+  low:  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  high: [50, 50, 50, 50, 1, 1, 10, 9, 100, 2, 1, 1]
+  fields:
+    - cars_ns_straight
+    - cars_ns_left
+    - cars_ew_straight
+    - cars_ew_left
+    - ambulance_ns
+    - ambulance_ew
+    - pedestrians_waiting
+    - current_phase
+    - time_in_phase
+    - weather
+    - pothole_ns
+    - pothole_ew
+
+tasks:
+  - id: easy
+    name: "Clear the Intersection"
+    difficulty: easy
+    description: >
+      Minimize total vehicle wait time over 50 steps starting from
+      a low-traffic, clear-weather scenario. Score = 1 - (avg_wait / max_wait).
+    max_steps: 50
+    seed: 42
+
+  - id: medium
+    name: "Emergency Vehicle Handler"
+    difficulty: medium
+    description: >
+      An ambulance appears in step 5. Clear it within 10 steps, survive 80
+      steps total, no crashes allowed. Score penalized per step of ambulance
+      delay and heavily penalized on crash.
+    max_steps: 80
+    seed: 123
+
+  - id: hard
+    name: "Monsoon Crisis Manager"
+    difficulty: hard
+    description: >
+      Monsoon weather, multiple ambulances, potholes on both roads.
+      Survive 150 steps with zero crashes. Score = composite of
+      crash-free, ambulance response time, and pedestrian throughput.
+    max_steps: 150
+    seed: 999
+
+server:
+  host: "0.0.0.0"
+  port: 7860
+  framework: fastapi
