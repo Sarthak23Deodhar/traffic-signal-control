@@ -7,7 +7,7 @@ name = "traffic-signal-control"
 version = "1.0.0"
 description = "Autonomous Traffic Signal Control — OpenEnv Hackathon (Meta x PyTorch x HuggingFace)"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 dependencies = [
     "fastapi>=0.111.0",
@@ -18,7 +18,11 @@ dependencies = [
     "openai>=1.30.0",
     "requests>=2.31.0",
     "pyyaml>=6.0.0",
+    "openenv-core>=0.2.0",
 ]
+
+[project.scripts]
+server = "server.app:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

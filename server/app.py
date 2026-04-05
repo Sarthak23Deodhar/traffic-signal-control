@@ -230,3 +230,13 @@ def root():
         "status": "running",
         "endpoints": ["/reset", "/step", "/state", "/tasks", "/grader", "/baseline"],
     }
+
+
+def main():
+    """Entry point for the server — required by openenv validate."""
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=7860)
+
+
+if __name__ == "__main__":
+    main()
