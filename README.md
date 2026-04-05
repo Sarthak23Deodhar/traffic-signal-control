@@ -1,7 +1,7 @@
 ---
 title: Traffic Signal Control — OpenEnv
 emoji: 🚦
-colorFrom: orange
+colorFrom: red
 colorTo: red
 sdk: docker
 pinned: true
