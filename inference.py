@@ -29,7 +29,7 @@ HF_TOKEN     = os.getenv("HF_TOKEN")                   # NO default
 API_KEY      = HF_TOKEN or os.getenv("OPENAI_API_KEY")
 ENV_URL      = os.getenv("ENV_URL", "http://localhost:7860").rstrip("/")
 
-BENCHMARK    = "indian-traffic-control"
+BENCHMARK    = "traffic-signal-control"
 SUCCESS_SCORE_THRESHOLD = 0.1
 
 # Task configs — seeds/max_steps must match openenv.yaml exactly

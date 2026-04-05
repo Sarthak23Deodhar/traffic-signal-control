@@ -1,5 +1,5 @@
 ---
-title: Indian Traffic Control — OpenEnv
+title: Traffic Signal Control — OpenEnv
 emoji: 🚦
 colorFrom: orange
 colorTo: red

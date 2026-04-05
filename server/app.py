@@ -25,10 +25,10 @@ from server.tasks import get_tasks, grade_episode, run_task_episode
 # ─── App setup ────────────────────────────────────────────────────────────────
 
 app = FastAPI(
-    title="Indian Traffic Control — OpenEnv",
+    title="Traffic Signal Control — OpenEnv",
     description=(
-        "Autonomous Traffic Control System for a chaotic 4-way Indian intersection. "
-        "Manages signal phases under red-light runners, potholes, monsoon, and emergency vehicles."
+        "Autonomous Traffic Signal Control System for a 4-way intersection. "
+        "Manages signal phases under red-light runners, potholes, weather, and emergency vehicles."
     ),
     version="1.0.0",
 )

@@ -1,9 +1,9 @@
-name: indian-traffic-control
+name: traffic-signal-control
 version: "1.0.0"
 description: >
-  Autonomous Traffic Control System for a chaotic 4-way Indian intersection.
-  The AI agent manages signal phases while dealing with red-light runners,
-  potholes, monsoon weather, and emergency vehicle prioritization.
+  Autonomous Traffic Signal Control System for a 4-way intersection.
+  The AI agent manages signal phases while handling red-light runners,
+  potholes, adverse weather, pedestrians, and emergency vehicle prioritization.
 author: "OpenEnv Hackathon Team"
 license: MIT
 
