@@ -96,6 +96,14 @@ def get_task_by_id(task_id: str) -> Dict[str, Any]:
 
 # ─── Graders ──────────────────────────────────────────────────────────────────
 
+def _clamp(score: float) -> float:
+    """
+    Clamp score to be STRICTLY between 0 and 1 (exclusive endpoints).
+    The OpenEnv validator requires score in (0, 1), not [0, 1].
+    """
+    return float(np.clip(score, 0.001, 0.999))
+
+
 def grade_episode(task_id: str, episode_metrics: Dict[str, Any]) -> float:
     """
     Score a completed episode for the given task.
@@ -110,7 +118,7 @@ def grade_episode(task_id: str, episode_metrics: Dict[str, Any]) -> float:
             - ped_clearance    (float)        – fraction of pedestrians cleared
 
     Returns:
-        score in [0.0, 1.0]
+        score strictly in (0.0, 1.0) — exclusive endpoints required by OpenEnv validator
     """
     if task_id == "easy":
         return _grade_easy(episode_metrics)
@@ -127,61 +135,64 @@ def _grade_easy(m: Dict[str, Any]) -> float:
     Score = 1 - (mean_wait / max_possible_wait).
     max_possible_wait = 50 cars (max_cars=50) per step.
     Crash incurs a 20% penalty multiplier.
-    Clipped to [0, 1].
+    Score is strictly in (0, 1).
     """
     if not m.get("total_waiting"):
-        return 0.0
+        return _clamp(0.001)  # no data → minimum non-zero score
     mean_wait = float(np.mean(m["total_waiting"]))
     max_possible = 50.0
     score = 1.0 - (mean_wait / max_possible)
     if m.get("crashed"):
         score *= 0.8   # 20% crash penalty but not instant zero
-    return float(np.clip(score, 0.0, 1.0))
+    return _clamp(score)
 
 
 def _grade_medium(m: Dict[str, Any]) -> float:
     """
-    crash_free_bonus  = 1.0 if no crash else 0.2
-    amb_delay_score   = max(0, 1 - total_amb_delay / 20.0)
+    crash_free_bonus  = 0.95 if no crash else 0.2  (capped below 1.0)
+    amb_delay_score   = max(0.01, 1 - total_amb_delay / 20.0)
     survival_fraction = steps_completed / 80
     Score = crash_free * amb_delay_score * survival_fraction
+    Score is strictly in (0, 1).
     """
     crashed = bool(m.get("crashed", False))
-    crash_free = 1.0 if not crashed else 0.2
+    # Cap crash_free at 0.95 so a perfect run cannot reach exactly 1.0
+    crash_free = 0.95 if not crashed else 0.2
 
     total_amb_delay = sum(m.get("amb_delays", [0]))
-    amb_score = max(0.0, 1.0 - total_amb_delay / 20.0)
+    amb_score = max(0.01, 1.0 - total_amb_delay / 20.0)
 
     steps = int(m.get("steps_completed", 0))
     survival = steps / 80.0
 
     score = crash_free * amb_score * survival
-    return float(np.clip(score, 0.0, 1.0))
+    return _clamp(score)
 
 
 def _grade_hard(m: Dict[str, Any]) -> float:
     """
-    crash_penalty   = 0.4 if crashed (60% reduction), 1.0 if crash-free
-    amb_score       = max(0, 1 - mean_amb_delay / 10.0)
-    ped_score       = ped_clearance fraction (0..1)
-    congestion_score = 1 - mean_wait / 50
+    crash_factor    = 0.4 if crashed (60% reduction), 0.95 if crash-free (capped below 1.0)
+    amb_score       = max(0.01, 1 - mean_amb_delay / 10.0)
+    ped_score       = ped_clearance fraction, clamped to (0.01, 0.99)
+    congestion_score = 1 - mean_wait / 50, clamped to (0.01, 0.99)
     Score = crash_factor * (0.4*amb_score + 0.3*ped_score + 0.3*congestion_score)
-    A crash-free run can achieve ~0.6–0.9; a run with crashes is penalised to ~0.15–0.4.
+    Score is strictly in (0, 1).
     """
     crashed = bool(m.get("crashed", False))
-    crash_factor = 0.4 if crashed else 1.0  # heavy but not zero
+    # Cap crash_factor at 0.95 so a perfect run cannot reach exactly 1.0
+    crash_factor = 0.4 if crashed else 0.95
 
     delays = m.get("amb_delays", [0])
     mean_delay = float(np.mean(delays)) if delays else 0.0
-    amb_score = float(np.clip(1.0 - mean_delay / 10.0, 0.0, 1.0))
+    amb_score = float(np.clip(1.0 - mean_delay / 10.0, 0.01, 0.99))
 
-    ped_score = float(np.clip(m.get("ped_clearance", 0.0), 0.0, 1.0))
+    ped_score = float(np.clip(m.get("ped_clearance", 0.01), 0.01, 0.99))
 
     mean_wait = float(np.mean(m["total_waiting"])) if m.get("total_waiting") else 50.0
-    congestion_score = float(np.clip(1.0 - mean_wait / 50.0, 0.0, 1.0))
+    congestion_score = float(np.clip(1.0 - mean_wait / 50.0, 0.01, 0.99))
 
     score = crash_factor * (0.4 * amb_score + 0.3 * ped_score + 0.3 * congestion_score)
-    return float(np.clip(score, 0.0, 1.0))
+    return _clamp(score)
 
 
 # ─── Episode runner (used by /baseline endpoint) ──────────────────────────────

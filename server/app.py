@@ -144,14 +144,7 @@ def tasks():
 def grader(request: GraderRequest):
     """
     Grade a completed episode for the given task_id.
-    Returns a deterministic score in [0.0, 1.0].
-
-    episode_metrics must include:
-      - steps_completed (int)
-      - crashed (bool)
-      - total_waiting (List[float])
-      - amb_delays (List[int])
-      - ped_clearance (float)
+    Returns a deterministic score strictly in (0.0, 1.0) — exclusive endpoints.
     """
     try:
         score = grade_episode(request.task_id, request.episode_metrics)
@@ -160,7 +153,7 @@ def grader(request: GraderRequest):
     return {
         "task_id": request.task_id,
         "score": score,
-        "score_range": [0.0, 1.0],
+        "score_range": "(0.0, 1.0) exclusive",
     }
 
 
