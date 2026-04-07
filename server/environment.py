@@ -10,6 +10,17 @@ import uuid
 import numpy as np
 from typing import Tuple, Dict, Any
 
+
+def _normalize_reward(raw: float) -> float:
+    """
+    Map any raw reward to strictly (0, 1) via sigmoid.
+    sigmoid(x) = 1 / (1 + exp(-x/scale)) is always in (0,1).
+    scale=200 keeps typical reward magnitudes centred around 0.5.
+    """
+    scale = 200.0
+    clipped = float(np.clip(raw / scale, -20.0, 20.0))  # prevent overflow
+    return float(1.0 / (1.0 + np.exp(-clipped)))
+
 from traffic_env import IndianTrafficEnv
 from models import (
     TrafficAction,
@@ -68,7 +79,7 @@ class IndianTrafficEnvironment:
         obs_arr, raw_reward, terminated, truncated, info = self._env.step(action.action)
 
         # Build named reward components from info
-        components: Dict[str, float] = {
+        raw_components: Dict[str, float] = {
             "wait_penalty": -float(np.sum(self._env.cars)) * 1.5,
             "ped_penalty": -float(self._env.ped_waiting) * 3.0,
             "amb_ns_penalty": -100.0 if (self._env.amb_ns and self._env.phase != 0) else 0.0,
@@ -76,7 +87,12 @@ class IndianTrafficEnvironment:
             "crash_penalty": -1000.0 if info.get("crashed") else 0.0,
         }
 
-        reward = TrafficReward(value=float(raw_reward), components=components)
+        # Normalize reward to strictly (0, 1) as required by the OpenEnv validator.
+        # Components are also normalized so the breakdown is consistent.
+        normalized_value = _normalize_reward(raw_reward)
+        components = {k: _normalize_reward(v) for k, v in raw_components.items()}
+
+        reward = TrafficReward(value=normalized_value, components=components)
         done = terminated or truncated
 
         self._state.step_count += 1
